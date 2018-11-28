@@ -63,9 +63,28 @@ func showTodoHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func createTodoHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	id := len(todos) + 1
+	todo := Todo{ID: id}
+	if err := decoder.Decode(&todo); err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(Response{Error: true, Payload: err.Error()})
+		return
+	}
+
+	todos = append(todos, todo)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(Response{
+		Error:   false,
+		Payload: nil,
+	})
+}
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/todos", listTodoHandler).Methods("GET")
+	r.HandleFunc("/todos", createTodoHandler).Methods("POST")
 	r.HandleFunc("/todos/{id}", showTodoHandler).Methods("GET")
 	log.Fatal(http.ListenAndServe("localhost:8080", r))
 }
