@@ -71,10 +71,33 @@ func createTodoHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func editTodoHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(Response{Error: true, Payload: err.Error()})
+		return
+	}
+	todo := todos[id]
+
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&todo); err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(Response{Error: true, Payload: err.Error()})
+		return
+	}
+	todos[id] = todo
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(Response{Error: false, Payload: nil})
+}
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/todos", listTodoHandler).Methods("GET")
 	r.HandleFunc("/todos", createTodoHandler).Methods("POST")
 	r.HandleFunc("/todos/{id}", showTodoHandler).Methods("GET")
+	r.HandleFunc("/todos/{id}", editTodoHandler).Methods("PATCH")
 	log.Fatal(http.ListenAndServe("localhost:8080", r))
 }
