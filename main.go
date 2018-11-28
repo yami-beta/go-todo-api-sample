@@ -11,13 +11,9 @@ import (
 
 // Todo : Todo
 type Todo struct {
-	ID       int    `json:"id"`
 	Text     string `json:"text"`
 	Complete bool   `json:"complete"`
 }
-
-// Todos : slice of Todo
-type Todos []Todo
 
 // Response : API Response
 type Response struct {
@@ -26,9 +22,9 @@ type Response struct {
 }
 
 var (
-	todos = Todos{
-		Todo{ID: 1, Text: "todo1", Complete: false},
-		Todo{ID: 2, Text: "todo2", Complete: false},
+	todos = map[int]Todo{
+		1: Todo{Text: "todo1", Complete: false},
+		2: Todo{Text: "todo2", Complete: false},
 	}
 )
 
@@ -49,13 +45,7 @@ func showTodoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var todo *Todo
-	for _, v := range todos {
-		if v.ID == id {
-			todo = &v
-			break
-		}
-	}
+	todo := todos[id]
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(Response{
 		Error:   false,
@@ -66,14 +56,14 @@ func showTodoHandler(w http.ResponseWriter, r *http.Request) {
 func createTodoHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	id := len(todos) + 1
-	todo := Todo{ID: id}
+	var todo Todo
 	if err := decoder.Decode(&todo); err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(Response{Error: true, Payload: err.Error()})
 		return
 	}
 
-	todos = append(todos, todo)
+	todos[id] = todo
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(Response{
 		Error:   false,
