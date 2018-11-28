@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -39,8 +40,32 @@ func listTodoHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func showTodoHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(Response{Error: true, Payload: err.Error()})
+		return
+	}
+
+	var todo *Todo
+	for _, v := range todos {
+		if v.ID == id {
+			todo = &v
+			break
+		}
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(Response{
+		Error:   false,
+		Payload: todo,
+	})
+}
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/todos", listTodoHandler).Methods("GET")
+	r.HandleFunc("/todos/{id}", showTodoHandler).Methods("GET")
 	log.Fatal(http.ListenAndServe("localhost:8080", r))
 }
