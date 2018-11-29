@@ -93,11 +93,27 @@ func editTodoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(Response{Error: false, Payload: nil})
 }
 
+func deleteTodoHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(Response{Error: true, Payload: err.Error()})
+		return
+	}
+
+	delete(todos, id)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(Response{Error: false, Payload: nil})
+}
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/todos", listTodoHandler).Methods("GET")
 	r.HandleFunc("/todos", createTodoHandler).Methods("POST")
 	r.HandleFunc("/todos/{id}", showTodoHandler).Methods("GET")
 	r.HandleFunc("/todos/{id}", editTodoHandler).Methods("PATCH")
+	r.HandleFunc("/todos/{id}", deleteTodoHandler).Methods("DELETE")
+	// 本当はgraceful shutdown処理を書くべきだが省略
 	log.Fatal(http.ListenAndServe("localhost:8080", r))
 }
