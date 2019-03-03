@@ -1,3 +1,5 @@
 module github.com/yami-beta/go-todo-api-sample
 
-require github.com/gorilla/mux v1.6.2
+go 1.12
+
+require github.com/gorilla/mux v1.7.0
